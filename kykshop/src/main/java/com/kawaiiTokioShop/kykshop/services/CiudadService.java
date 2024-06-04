@@ -19,7 +19,7 @@ public class CiudadService {
         return ciudadRepository.findAll();
     }
 
-    public Optional<CiudadModel> getCiudadById(int id) {
+    public Optional<CiudadModel> getCiudadById(String id) {
         return ciudadRepository.findById(id);
     }
 
@@ -27,7 +27,7 @@ public class CiudadService {
         return ciudadRepository.save(ciudad);
     }
 
-    public void deleteCiudad(int id) {
+    public void deleteCiudad(String id) {
         ciudadRepository.deleteById(id);
     }
 }

@@ -2,6 +2,7 @@ package com.kawaiiTokioShop.kykshop.services;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,16 +15,19 @@ import com.kawaiiTokioShop.kykshop.dto.ProductoDto;
 import com.kawaiiTokioShop.kykshop.enums.TipoIdentificacion;
 import com.kawaiiTokioShop.kykshop.models.CiudadModel;
 import com.kawaiiTokioShop.kykshop.models.FacturaModel;
+import com.kawaiiTokioShop.kykshop.models.InventarioModel;
 import com.kawaiiTokioShop.kykshop.models.PedidoModel;
 import com.kawaiiTokioShop.kykshop.models.PersonaModel;
 import com.kawaiiTokioShop.kykshop.models.ProductoModel;
 import com.kawaiiTokioShop.kykshop.models.ProductosFacturaModel;
 import com.kawaiiTokioShop.kykshop.repositories.CiudadRepository;
 import com.kawaiiTokioShop.kykshop.repositories.FacturaRepository;
+import com.kawaiiTokioShop.kykshop.repositories.InventarioRepository;
 import com.kawaiiTokioShop.kykshop.repositories.PedidoRepository;
 import com.kawaiiTokioShop.kykshop.repositories.PersonaRepository;
 import com.kawaiiTokioShop.kykshop.repositories.ProductoRepository;
 import com.kawaiiTokioShop.kykshop.repositories.ProductosFacturaRepository;
+import com.kawaiiTokioShop.kykshop.responses.FacturaProductosResponse;
 
 import jakarta.transaction.Transactional;
 
@@ -47,6 +51,9 @@ public class PedidoService {
     
     @Autowired
     private CiudadRepository ciudadRepository;
+    
+    @Autowired
+    private InventarioRepository inventarioRepository;
 
     public List<PedidoModel> getAllPedidos() {
         return pedidoRepository.findAll();
@@ -66,9 +73,7 @@ public class PedidoService {
     
     @Transactional
     public CheckoutDto createPedido(CheckoutDto pedido) {
-    	
-    	int contadorProductos = 0;
-    	
+    	    	
     	//Busca la persona
     	List<PersonaModel> personas = personaRepository.findByIdentificacion(pedido.getIdNumber());
     	if (personas.isEmpty()) {
@@ -76,7 +81,7 @@ public class PedidoService {
 			personaModel.setNombres(pedido.getFirstName());
 			personaModel.setApellidos(pedido.getLastName());
 			personaModel.setCorreo(pedido.getEmail());
-			personaModel.setCodigoCiudad(Integer.valueOf(pedido.getCity()));
+			personaModel.setCodigoCiudad(pedido.getCity());
 			personaModel.setDireccion(pedido.getAddress());
 			personaModel.setIdCargo(1);
 			personaModel.setIdentificacion(pedido.getIdNumber());
@@ -88,15 +93,15 @@ public class PedidoService {
     	
     	//Crea el pedido
     	PedidoModel pedidoModel = new PedidoModel();
-    	pedidoModel.setCantidadSolicitada(pedido.getCarts().size());
+    	pedidoModel.setCantidadSolicitada(pedido.getItemsCount());
     	pedidoModel.setEstadoPedido("PREPARADO");
     	pedidoModel.setFechaPedido(LocalDateTime.now());
     	pedidoModel.setIdPersona(personas.get(0).getIdPersona());
-    	//pedidoModel = pedidoRepository.save(pedidoModel);
+    	pedidoModel = pedidoRepository.save(pedidoModel);
     	
     	//Crea la factura
     	FacturaModel factura = new FacturaModel();
-    	factura.setCantidadVendida(pedido.getCarts().size());
+    	factura.setCantidadVendida(pedido.getItemsCount());
     	factura.setCVVTarjeta(pedido.getCvv());
     	factura.setEstadoFactura("COMPLETA");
     	factura.setFechaFactura(LocalDateTime.now());
@@ -105,7 +110,7 @@ public class PedidoService {
     	factura.setIdPersona(personas.get(0).getIdPersona());
     	factura.setNumeroTarjeta(pedido.getCardNumber());
     	factura.setVrlTotal(pedido.getTotal());
-    	//factura = facturaRepository.save(factura);
+    	factura = facturaRepository.save(factura);
     	
     	//Crea los productos de la factura
     	for (ProductoDto cart : pedido.getCarts()) {
@@ -115,22 +120,49 @@ public class PedidoService {
             BeanUtils.copyProperties(producto, prodFac);
             prodFac.setCantidad(cart.getQuantity());
             prodFac.setIdFactura(factura.getIdFactura());
-           // prodFac = pFRepository.save(prodFac);
-            contadorProductos = contadorProductos + cart.getQuantity();
+            prodFac = pFRepository.save(prodFac);
+            
+            InventarioModel inventario = inventarioRepository.findById(prodFac.getIdInventario()).orElse(null);
+            inventario.setCantidad(inventario.getCantidad() - prodFac.getCantidad());
+            inventarioRepository.save(inventario);
 		}
     	
     	pedido.setIdFactura(factura.getIdFactura());
     	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     	pedido.setDateFactura(factura.getFechaFactura().format(formatter));
     	pedido.setIdType(TipoIdentificacion.valueOf(pedido.getIdType()).getDescripcion());
-    	CiudadModel ciudadModel = ciudadRepository.findById(Integer.valueOf(pedido.getCity())).orElse(new CiudadModel());
+    	CiudadModel ciudadModel = ciudadRepository.findById(pedido.getCity()).orElse(new CiudadModel());
     	pedido.setCity(ciudadModel.getNombre());
-    	pedido.setItemsCount(contadorProductos);
     	
     	//Agregar la fideliazción
     	//FidelizacionModel fidelizacion = new FidelizacionModel();	
 
     	return pedido;
+    }
+    
+    
+    public List<FacturaProductosResponse> getPedidoFacturas(String email) {
+    	
+    	List<FacturaProductosResponse> fprs = new ArrayList<FacturaProductosResponse>();
+    	List<PersonaModel> personas = personaRepository.findByCorreo(email);
+    	
+    	if (!personas.isEmpty()) {
+        	List<PedidoModel> pedidos = pedidoRepository.findByIdPersona(personas.get(0).getIdPersona());
+        	
+        	for (PedidoModel pedido : pedidos) {
+        		FacturaProductosResponse fpr = new FacturaProductosResponse();
+        		fpr.setPedido(pedido);
+    			List<FacturaModel> facturas = facturaRepository.findByIdPedido(pedido.getIdPedido());
+    				for (FacturaModel factura : facturas) {
+    					fpr.setFactura(factura);
+    					List<ProductosFacturaModel> pfm = pFRepository.findByIdFactura(factura.getIdFactura());
+    					fpr.setProductosFactura(pfm);
+    				}
+    			fprs.add(fpr);
+    		}	
+		}
+    	
+    	return fprs;
     }
 }
 

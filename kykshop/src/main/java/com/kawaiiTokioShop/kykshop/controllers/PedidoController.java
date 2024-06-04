@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kawaiiTokioShop.kykshop.dto.CheckoutDto;
-import com.kawaiiTokioShop.kykshop.models.FacturaModel;
 import com.kawaiiTokioShop.kykshop.models.PedidoModel;
+import com.kawaiiTokioShop.kykshop.responses.FacturaProductosResponse;
 import com.kawaiiTokioShop.kykshop.services.PedidoService;
 
 @RestController
@@ -68,6 +68,13 @@ public class PedidoController {
     public ResponseEntity<CheckoutDto> createCompra(@RequestBody CheckoutDto pedido) {
     	CheckoutDto factura = pedidoService.createPedido(pedido);
         return new ResponseEntity<>(factura, HttpStatus.CREATED);
+    }
+    
+    @GetMapping("/facturas/{email}")
+    public ResponseEntity<List<FacturaProductosResponse>> getAllPedidosFacturas(@PathVariable("email") String email) {
+    	List<FacturaProductosResponse> fpr = pedidoService.getPedidoFacturas(email);
+    	System.out.println(fpr);
+        return new ResponseEntity<>(fpr, HttpStatus.OK);
     }
 
 }

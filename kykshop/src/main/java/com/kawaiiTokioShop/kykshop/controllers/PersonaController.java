@@ -30,11 +30,17 @@ public class PersonaController {
         return new ResponseEntity<>(personas, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("{id}")
     public ResponseEntity<PersonaModel> getPersonaById(@PathVariable("id") int id) {
         return personaService.getPersonaById(id)
                 .map(persona -> new ResponseEntity<>(persona, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+    
+    @GetMapping("/correo/{correo}")
+    public ResponseEntity<PersonaModel> getPersonaByCorreo(@PathVariable("correo") String correo) {
+        PersonaModel persona =  personaService.getPersonaByCorreo(correo);
+        return new ResponseEntity<>(persona, HttpStatus.OK);
     }
 
     @PostMapping
@@ -45,10 +51,12 @@ public class PersonaController {
 
     @PutMapping("/{id}")
     public ResponseEntity<PersonaModel> updatePersona(@PathVariable("id") int id, @RequestBody PersonaModel persona) {
-        if (!personaService.getPersonaById(id).isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+//        if (!personaService.getPersonaById(id).isPresent()) {
+//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//        }
         persona.setIdPersona(id);
+        persona.setIdTipoPersona(persona.getIdTipoPersona() != null ? persona.getIdTipoPersona() : "1");
+        persona.setIdCargo(persona.getIdCargo() != 0 ? persona.getIdCargo() : 2);
         PersonaModel updatedPersona = personaService.savePersona(persona);
         return new ResponseEntity<>(updatedPersona, HttpStatus.OK);
     }

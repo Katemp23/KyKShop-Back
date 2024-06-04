@@ -14,7 +14,7 @@ public class CiudadModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Codigo_Ciudad")
-    private int codigoCiudad;
+    private String codigoCiudad;
 
     @Column(name = "Nombre")
     private String nombre;
@@ -23,19 +23,19 @@ public class CiudadModel {
     private String departamento;
 
     // Métodos getter y setter
-    public int getCodigoCiudad() {
-        return codigoCiudad;
-    }
-
-    public void setCodigoCiudad(int codigoCiudad) {
-        this.codigoCiudad = codigoCiudad;
-    }
-
     public String getNombre() {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
+    public String getCodigoCiudad() {
+		return codigoCiudad;
+	}
+
+	public void setCodigoCiudad(String codigoCiudad) {
+		this.codigoCiudad = codigoCiudad;
+	}
+
+	public void setNombre(String nombre) {
         this.nombre = nombre;
     }
 

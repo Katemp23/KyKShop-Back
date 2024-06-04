@@ -44,7 +44,7 @@ public class PersonaModel {
     private String tipoId;
 
     @Column(name = "Codigo_Ciudad")
-    private Integer codigoCiudad;
+    private String codigoCiudad;
 
     // Métodos getter y setter
     public int getIdPersona() {
@@ -127,11 +127,12 @@ public class PersonaModel {
 		this.tipoId = tipoId;
 	}
 
-	public Integer getCodigoCiudad() {
-        return codigoCiudad;
-    }
+	public String getCodigoCiudad() {
+		return codigoCiudad;
+	}
 
-    public void setCodigoCiudad(Integer codigoCiudad) {
-        this.codigoCiudad = codigoCiudad;
-    }
+	public void setCodigoCiudad(String codigoCiudad) {
+		this.codigoCiudad = codigoCiudad;
+	}
+
 }

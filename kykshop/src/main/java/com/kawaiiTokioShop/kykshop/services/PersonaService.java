@@ -30,5 +30,14 @@ public class PersonaService {
     public void deletePersona(int id) {
     	personaRepository.deleteById(id);
     }
+    
+    public PersonaModel getPersonaByCorreo(String correo) {
+    	List<PersonaModel> personas = personaRepository.findByCorreo(correo);
+    	if (personas.isEmpty()) {
+			return new PersonaModel();
+		} else {
+			return personas.get(0);
+		}
+    }
 }
 

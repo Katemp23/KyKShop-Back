@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kawaiiTokioShop.kykshop.dto.InventarioDto;
 import com.kawaiiTokioShop.kykshop.models.InventarioModel;
 import com.kawaiiTokioShop.kykshop.services.InventarioService;
 
@@ -24,7 +25,7 @@ public class InventarioController {
     @Autowired
     private InventarioService inventarioService;
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<InventarioModel>> getAllInventario() {
         List<InventarioModel> inventario = inventarioService.getAllInventarios();
         return new ResponseEntity<>(inventario, HttpStatus.OK);
@@ -61,4 +62,36 @@ public class InventarioController {
         inventarioService.deleteInventario(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/productos")
+    public ResponseEntity<List<InventarioDto>> getAllInventarioProductos() {
+        List<InventarioDto> inventario = inventarioService.getAllInventarioProductos();
+        return new ResponseEntity<>(inventario, HttpStatus.OK);
+    }
+
+    @PostMapping("/productos")
+    public ResponseEntity<InventarioDto> createInventarioProducto(@RequestBody InventarioDto inventarioDto) {
+        InventarioDto createdInventario = inventarioService.createInventarioProducto(inventarioDto);
+        return new ResponseEntity<>(createdInventario, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/productos/{id}")
+    public ResponseEntity<InventarioDto> updateInventarioProducto(@PathVariable("id") int id, @RequestBody InventarioDto inventario) {
+        if (!inventarioService.getInventarioById(id).isPresent()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        inventario.getInventario().setIdInventario(id);
+        InventarioDto updatedInventario = inventarioService.updateInventarioProducto(inventario);
+        return new ResponseEntity<>(updatedInventario, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/productos/{id}")
+    public ResponseEntity<Void> deleteInventarioProducto(@PathVariable("id") int id) {
+        if (!inventarioService.getInventarioById(id).isPresent()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        inventarioService.deleteInventarioProducto(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
+

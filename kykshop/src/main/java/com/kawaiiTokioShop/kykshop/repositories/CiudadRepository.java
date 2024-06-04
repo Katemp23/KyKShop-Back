@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import com.kawaiiTokioShop.kykshop.models.CiudadModel;
 
 @Repository
-public interface CiudadRepository extends JpaRepository<CiudadModel, Integer> {
+public interface CiudadRepository extends JpaRepository<CiudadModel, String> {
 }
